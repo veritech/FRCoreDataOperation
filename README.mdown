@@ -1,0 +1,93 @@
+FRCoreDataOperation
+===========================
+
+**Problem**
+
+* So you like multithreading, cool.
+* But you heard (correctly) that NSManagedObjects and CoreData isn't thread safe
+* But you want NSManagedObjects in your threads/Operations
+
+Well here is the solution. FRCoreDataOperation, will generate a thread context on demand and make it nice and easy for you to use.
+
+Basic Usage
+-----------
+
+This class is designed to be be subclassed. Your subclass can override main, and all the other NSOperation methods just fine.
+You could just insert your own main method in the parent, but that would be kinda silly ^_^
+
+
+	FRCoreDataOperation *op = [[FRCoreDataOperation alloc] init];
+	
+	[op setMainContext:<YOUR MAIN CONTEXT>]; 
+	
+	[<YOUR NSOperationQueue> addOperation:op];
+	
+	[op release];
+
+Inside your subclass's operation all of your requests for a *NSManagedObjectContext* should use
+
+	[self threadContext]
+
+This will return a thread safe managedObjectContext, which will use the persistent store coordinator as the managed object that you passed in.
+Do not call this method outside of the operation or in the *-(void)start* method of your NSOperation, as that will break it's thread isolation.
+
+Example
+-------
+
+Lets say i want to import a list of countries i've visited into my new awesome travel app, but because i'm globe trotter, the list is huge.
+the main method of my 'Travel import operation' should look a little something like this ...
+
+	-(void) main{
+		
+		NSAutoReleasePool *pool = [[NSAutoReleasePool alloc] init];
+		
+		//My travel history
+		NSArray *countries = [NSArray arrayWithObjects:
+			@"China",
+			@"Spain",
+			@"Greece",
+			@"France",
+			@"Germany",
+			@"Hong Kong",
+			@"Jamaica",
+			@"Ukraine",
+			@"USA",
+			@"Canada",
+			@"Denmark",
+			@"Belgium",
+			@"Netherlands",
+			@"Ireland",
+			@"Wales",
+			@"Qatar",
+			@"Malta",
+			nil
+		];
+		
+		for( country in countries ){
+			
+			//Destination is a our subclassed NSManagedObject
+			//We create one for each country, and assign it to thread context
+			[Destination destinationWithName:country
+									inContext:[self threadContext]
+			]
+			
+		}
+		
+		//Save the context
+		if( ![[self threadContext] save:&error] ){
+			NSLog(@"Save failed %@",error);
+		}
+		
+		//Drain our pool
+		[pool drain];
+	}
+
+Thats all folks, if your actually doing some proper work, you want want to sleep your thread in-between iterations of your main loop.
+Also if your operation is going to run for any serious length of time, you'll want to consider checking *isCancelled* periodically to make sure you need to continue.
+
+Credit
+------
+
+Jonathan Dalrymple [E-mail](mailto:jonathan@float-right.co.uk) [twitter](http://twitter/veritech) [Online](http://float-right.co.uk)
+
+While i wrote the code, the Fantastic Marcus Zara gave me the inspiration and direction, get his book on CoreData, it's worth it!
