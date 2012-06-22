@@ -23,6 +23,11 @@
  */
 @property (nonatomic,assign)	BOOL						mergeChanges;
 
+
+-(id) initWithManagedObjectContext:(NSManagedObjectContext*) aMOC;
+/**
+ *	Called when the operation's isCancelled flag is set
+ */
 -(void) operationWillCancel;
 
 @end

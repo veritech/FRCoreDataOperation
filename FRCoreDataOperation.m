@@ -33,16 +33,14 @@
 
 @synthesize mainContext		= _mainContext;
 @synthesize mergeChanges	= _mergeChanges;
-@dynamic threadContext;
 
-#pragma mark -
-#pragma mark Object life cycle
--(id) init{
+#pragma mark - Object life cycle
+-(id) initWithManagedObjectContext:(NSManagedObjectContext*) aMOC{
 	
 	if( !(self = [super init])) return nil;
 	
+	_mainContext	= aMOC;	
 	_threadContext	= nil;
-	_mainContext	= nil;
 	_mergeChanges	= YES;
 	
 	[self addObserver:self 
@@ -91,8 +89,6 @@
 		//TODO:
 		//We need to stop doing this and have a proper mutator so that it can provided
 		storeCoordinator = [[self mainContext] persistentStoreCoordinator];
-		
-		//[[[UIApplication sharedApplication] delegate] performSelector:@selector(persistentStoreCoordinator)];
 		
 		_threadContext = [[NSManagedObjectContext alloc] init];
 		
