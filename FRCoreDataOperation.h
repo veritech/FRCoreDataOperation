@@ -9,16 +9,18 @@
 #import <Foundation/Foundation.h>
 #import <CoreData/CoreData.h>
 
-@interface FRCoreDataOperation : NSOperation {
-	//Two contexts
-	NSManagedObjectContext	*_threadContext;
-	NSManagedObjectContext	*_mainContext;
-	
-	BOOL					_mergeChanges;
-}
+@interface FRCoreDataOperation : NSOperation
 
-@property (nonatomic,retain)	NSManagedObjectContext		*mainContext;
-@property (readonly)			NSManagedObjectContext		*threadContext;
+/**
+ *	A reference to the main context
+ */
+@property (nonatomic,readonly)	NSManagedObjectContext		*mainContext;
+
+
+/**
+ *	Determines if the changes should be merged into the main context
+ *	Defaults to YES
+ */
 @property (nonatomic,assign)	BOOL						mergeChanges;
 
 -(void) operationWillCancel;

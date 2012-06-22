@@ -8,8 +8,23 @@
 
 #import "FRCoreDataOperation.h"
 
-@interface FRCoreDataOperation(private)
+@interface FRCoreDataOperation(){
+	//Two contexts
+	NSManagedObjectContext	*_threadContext;
+	NSManagedObjectContext	*_mainContext;
+	
+	BOOL					_mergeChanges;
+}
 
+/**
+ *	A context linked to the same persistent store as the main context, 
+ *	created on a background thread. To onlt be used within the operation
+ */
+-(NSManagedObjectContext*) threadContext;
+
+/**
+ *	Called when the thread context saves
+ */
 -(void) threadContextDidSave:(NSNotification*) aNotification;
 
 @end
@@ -39,10 +54,23 @@
 	return self;
 }
 
+-(void) dealloc{
+	
+	[self removeObserver:self 
+			  forKeyPath:@"isCancelled"
+	 ];
+	
+	//Remove the observer if we've used the thread context
+	if(_threadContext){
+		[[NSNotificationCenter defaultCenter] removeObserver:self 
+														name:NSManagedObjectContextDidSaveNotification 
+													  object:_threadContext
+		 ];		
+	}
 
+}
 
-#pragma mark -
-#pragma mark CoreData Stack management
+#pragma mark - CoreData Stack management
 /**
  *	Get a new managed object context for this thread
  */
@@ -88,21 +116,18 @@
 	
 	if( [self mergeChanges] ){
 		
-		//NSLog(@"Merging %@ & %@",[self mainContext], [self threadContext]);
+		NSManagedObjectContext *blockContext = [self mainContext];
 		
-		SEL selector = @selector(mergeChangesFromContextDidSaveNotification:);
+		[[NSOperationQueue mainQueue] addOperationWithBlock:^{
+			[blockContext mergeChangesFromContextDidSaveNotification:aNotification];
+		}];
 		
-		[[self mainContext] performSelectorOnMainThread:selector
-											 withObject:aNotification
-										  waitUntilDone:YES
-		 ];	
 	}
 
 }
 
 
-#pragma mark -
-#pragma mark KVO Observing
+#pragma mark - KVO Observing
 -(void) observeValueForKeyPath:(NSString *) aKeyPath 
 					  ofObject:(id) aObject 
 						change:(NSDictionary *) aChange 
@@ -118,32 +143,11 @@
 }
 
 -(void) operationWillCancel{
-	
-	NSLog(@"%@ cancelled",self);
+	NSLog(@"%@ operationWillCancel",self);
 }
 
 -(NSString*) description{
 	return [NSString stringWithFormat:@"%@ Ready:%d Executing:%d Finished:%d Cancelled:%d",[super description],[self isReady],[self isExecuting],[self isFinished],[self isCancelled]];
-}
-
--(void) dealloc{
-	
-	[self removeObserver:self 
-			  forKeyPath:@"isCancelled"
-	 ];
-	
-	[[NSNotificationCenter defaultCenter] removeObserver:self 
-													name:NSManagedObjectContextDidSaveNotification 
-												  object:_threadContext
-	 ];
-	
-	[_threadContext release];
-	_threadContext = nil;
-	
-	[_mainContext release];
-	_mainContext = nil;
-
-	[super dealloc];
 }
 
 @end
