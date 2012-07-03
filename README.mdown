@@ -16,13 +16,9 @@ This class is designed to be be subclassed. Your subclass can override main, and
 You could just insert your own main method in the parent, but that would be kinda silly ^_^
 
 
-	FRCoreDataOperation *op = [[FRCoreDataOperation alloc] init];
-	
-	[op setMainContext:<YOUR MAIN CONTEXT>]; 
+	FRCoreDataOperation *op = [[FRCoreDataOperation alloc] initWithManagedObjectContext:<MAIN MANAGED OBJECT CONTEXT>];
 	
 	[<YOUR NSOperationQueue> addOperation:op];
-	
-	[op release];
 
 Inside your subclass's operation all of your requests for a *NSManagedObjectContext* should use
 
@@ -30,6 +26,8 @@ Inside your subclass's operation all of your requests for a *NSManagedObjectCont
 
 This will return a thread safe managedObjectContext, which will use the persistent store coordinator as the managed object that you passed in.
 Do not call this method outside of the operation or in the *-(void)start* method of your NSOperation, as that will break it's thread isolation.
+
+**This Operation is ARC compatible**!
 
 Example
 -------
@@ -39,47 +37,54 @@ the main method of my 'Travel import operation' should look a little something l
 
 	-(void) main{
 		
-		NSAutoReleasePool *pool = [[NSAutoReleasePool alloc] init];
+		@autorelease{
 		
-		//My travel history
-		NSArray *countries = [NSArray arrayWithObjects:
-			@"China",
-			@"Spain",
-			@"Greece",
-			@"France",
-			@"Germany",
-			@"Hong Kong",
-			@"Jamaica",
-			@"Ukraine",
-			@"USA",
-			@"Canada",
-			@"Denmark",
-			@"Belgium",
-			@"Netherlands",
-			@"Ireland",
-			@"Wales",
-			@"Qatar",
-			@"Malta",
-			nil
-		];
+			//My travel history
+			NSArray *countries = [NSArray arrayWithObjects:
+				@"China",
+				@"Spain",
+				@"Greece",
+				@"France",
+				@"Germany",
+				@"Hong Kong",
+				@"Jamaica",
+				@"Ukraine",
+				@"USA",
+				@"Canada",
+				@"Denmark",
+				@"Belgium",
+				@"Netherlands",
+				@"Ireland",
+				@"Thailand",
+				@"Malaysia",
+				@"Australia",
+				@"Israel",
+				@"Vietnam",
+				@"Macau",
+				@"Iceland",
+				@"Cambodia"
+				@"Wales",
+				@"Qatar",
+				@"Malta",
+				nil
+			];
 		
-		for( country in countries ){
+			for( country in countries ){
 			
-			//Destination is a our subclassed NSManagedObject
-			//We create one for each country, and assign it to thread context
-			[Destination destinationWithName:country
-									inContext:[self threadContext]
-			]
+				//Destination is a our subclassed NSManagedObject
+				//We create one for each country, and assign it to thread context
+				[Destination destinationWithName:country
+							inContext:[self threadContext]
+				]
 			
-		}
+			}
 		
-		//Save the context
-		if( ![[self threadContext] save:&error] ){
-			NSLog(@"Save failed %@",error);
-		}
+			//Save the context
+			if( ![[self threadContext] save:&error] ){
+				NSLog(@"Save failed %@",error);
+			}
 		
-		//Drain our pool
-		[pool drain];
+		}
 	}
 
 Thats all folks, if your actually doing some proper work, you want want to sleep your thread in-between iterations of your main loop.
