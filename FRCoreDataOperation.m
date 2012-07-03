@@ -80,11 +80,8 @@
 	if( !_threadContext ){
 		
 		//Throw an exception if there is no main context
-		if( ![self mainContext] ){
-			[NSException raise:@"FRCoreDataOperationException" 
-						format:@"No Main context set in %@, cannot create thread context!",self
-			 ];
-		}
+		NSAssert([self mainContext], @"No Main context set in %@, cannot create thread context!",self);
+		NSAssert(![NSThread isMainThread], @"Thread Context called from the main context");
 		
 		//TODO:
 		//We need to stop doing this and have a proper mutator so that it can provided
@@ -121,7 +118,6 @@
 	}
 
 }
-
 
 #pragma mark - KVO Observing
 -(void) observeValueForKeyPath:(NSString *) aKeyPath 
