@@ -3,7 +3,7 @@
 //  
 //
 //  Created by Jonathan Dalrymple on 19/09/2010.
-//  .
+//  
 //  Copyright (C) 2012 Jonathan Dalrymple
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -27,12 +27,12 @@
  *	A context linked to the same persistent store as the main context, 
  *	created on a background thread. To onlt be used within the operation
  */
--(NSManagedObjectContext*) threadContext;
+- (NSManagedObjectContext *)threadContext;
 
 /**
  *	Called when the thread context saves
  */
--(void) threadContextDidSave:(NSNotification*) aNotification;
+- (void)threadContextDidSave:(NSNotification *) aNotification;
 
 @end
 
@@ -42,34 +42,34 @@
 @synthesize mergeChanges	= _mergeChanges;
 
 #pragma mark - Object life cycle
--(id) initWithManagedObjectContext:(NSManagedObjectContext*) aMOC{
+- (id)initWithManagedObjectContext:(NSManagedObjectContext *)aMOC {
 	
-	if( !(self = [super init])) return nil;
+	if (!(self = [super init])) return nil;
 	
 	_mainContext	= aMOC;	
 	_threadContext	= nil;
 	_mergeChanges	= YES;
 	
 	[self addObserver:self 
-		   forKeyPath:@"isCancelled" 
-			  options:NSKeyValueObservingOptionNew 
-			  context:NULL
+         forKeyPath:@"isCancelled"
+            options:NSKeyValueObservingOptionNew
+            context:NULL
 	 ];
 	
 	return self;
 }
 
--(void) dealloc{
+- (void)dealloc {
 	
 	[self removeObserver:self 
-			  forKeyPath:@"isCancelled"
+            forKeyPath:@"isCancelled"
 	 ];
 	
 	//Remove the observer if we've used the thread context
-	if(_threadContext){
+	if (_threadContext) {
 		[[NSNotificationCenter defaultCenter] removeObserver:self 
-														name:NSManagedObjectContextDidSaveNotification 
-													  object:_threadContext
+                                                    name:NSManagedObjectContextDidSaveNotification
+                                                  object:_threadContext
 		 ];		
 	}
 
@@ -79,7 +79,7 @@
 /**
  *	Get a new managed object context for this thread
  */
--(NSManagedObjectContext*) threadContext{
+- (NSManagedObjectContext *)threadContext {
 	
 	NSPersistentStoreCoordinator	*storeCoordinator;
 	
@@ -102,9 +102,9 @@
 		[_threadContext setPersistentStoreCoordinator:storeCoordinator];
 		
 		[[NSNotificationCenter defaultCenter] addObserver:self 
-												 selector:@selector(threadContextDidSave:) 
-													 name:NSManagedObjectContextDidSaveNotification 
-												   object:_threadContext
+                                             selector:@selector(threadContextDidSave:)
+                                                 name:NSManagedObjectContextDidSaveNotification
+                                               object:_threadContext
 		 ];
 	}
 	
@@ -112,7 +112,7 @@
 }
 
 //Context did save
--(void) threadContextDidSave:(NSNotification*) aNotification{
+- (void)threadContextDidSave:(NSNotification *) aNotification {
 	
 	if( [self mergeChanges] ){
 		
@@ -127,26 +127,32 @@
 }
 
 #pragma mark - KVO Observing
--(void) observeValueForKeyPath:(NSString *) aKeyPath 
-					  ofObject:(id) aObject 
-						change:(NSDictionary *) aChange 
-					   context:(void *)aContext{
+- (void)observeValueForKeyPath:(NSString *)aKeyPath 
+                      ofObject:(id) aObject
+                        change:(NSDictionary *) aChange
+                       context:(void *)aContext {
 	
-	if( [aKeyPath isEqualToString:@"isCancelled"] ){
+	if ([aKeyPath isEqualToString:@"isCancelled"]) {
 	
-		if( [[aChange objectForKey:NSKeyValueChangeNewKey] boolValue] ){
+		if ([[aChange objectForKey:NSKeyValueChangeNewKey] boolValue]) {
 			[self operationWillCancel];
 		}
 	}
 	
 }
 
--(void) operationWillCancel{
+- (void)operationWillCancel {
 	NSLog(@"%@ operationWillCancel",self);
 }
 
--(NSString*) description{
-	return [NSString stringWithFormat:@"%@ Ready:%d Executing:%d Finished:%d Cancelled:%d",[super description],[self isReady],[self isExecuting],[self isFinished],[self isCancelled]];
+- (NSString *)description {
+	return [NSString stringWithFormat:@"%@ Ready:%d Executing:%d Finished:%d Cancelled:%d",
+          [super description],
+          [self isReady],
+          [self isExecuting],
+          [self isFinished],
+          [self isCancelled]
+          ];
 }
 
 @end
