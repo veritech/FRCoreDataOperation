@@ -40,7 +40,7 @@
  *	@param aMOC a ManagedObjectContext
  *	@return FRCoreDataOperation
  */
-- (id)initWithManagedObjectContext:(NSManagedObjectContext *)aMOC ;
+- (id)initWithManagedObjectContext:(NSManagedObjectContext *)aMOC;
 
 /**
  *	Called when the operation's isCancelled flag is set
