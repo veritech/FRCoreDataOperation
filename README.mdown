@@ -12,6 +12,8 @@ Well here is the solution. FRCoreDataOperation, will generate a thread context o
 Basic Usage
 -----------
 
+**FRCoreDataOperation**
+
 This class is designed to be be subclassed. Your subclass can override main, and all the other NSOperation methods just fine.
 You could just insert your own main method in the parent, but that would be kinda silly ^_^
 
@@ -26,6 +28,38 @@ Inside your subclass's operation all of your requests for a *NSManagedObjectCont
 
 This will return a thread safe managedObjectContext, which will use the persistent store coordinator as the managed object that you passed in.
 Do not call this method outside of the operation or in the *-(void)start* method of your NSOperation, as that will break it's thread isolation.
+
+**FRCoreDataBlockOperation** [NEW!]
+
+This class is CoreData focused version of the NSBlockOperation class. You can assign
+an operation a *NSManagedObjectContext* and then add multiple blocks to the operation
+to be executed.
+
+	FRCoreDataBlockOperation *op = [[FRCoreDataBlockOperation alloc] initWithManagedObjectContext:<MAIN MANAGED OBJECT CONTEXT>];
+
+	[op addExecutionBlock:^(NSManagedObjectContext *threadContext){
+	
+		//DO your work on threaded NSManagedObjectContext
+	
+		return NO;	//Return YES to save, no to not save
+	}];
+
+	[<YOUR NSOperationQueue> addOperation:op];
+
+The NSManagedObjectContext is shared between all of the execution blocks so you can
+share state between blocks.
+
+The execution block return value determines if the NSManagedObjectContext should 
+be saveed.
+
+There is also a *saveAfterExecution* property on the operation to determine whether
+the *NSManagedObjectContext* is saved or not when all of the execution blocks have
+been executed.
+
+Also the *completionBlock* property is not used internally, so you may use it to perform
+cleanup. Alternatively the blocks are performed in the sequence they are added, so if
+you require access to the threaded NSManagedObjectContext for any cleanup you can
+use this approach.
 
 **This Operation is ARC compatible**!
 
