@@ -62,7 +62,7 @@ cleanup. Alternatively the blocks are performed in the sequence they are added, 
 you require access to the threaded NSManagedObjectContext for any cleanup you can
 use this approach.
 
-**Both Operations is ARC compatible**!
+**Both Operations are ARC compatible**!
 
 Example
 -------
