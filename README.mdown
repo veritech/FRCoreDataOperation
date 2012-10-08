@@ -1,4 +1,4 @@
-FRCoreDataOperation
+FRCoreDataOperation & FRCoreDataBlockOperation
 ===========================
 
 **Problem**
@@ -33,7 +33,8 @@ Do not call this method outside of the operation or in the *-(void)start* method
 
 This class is CoreData focused version of the NSBlockOperation class. You can assign
 an operation a *NSManagedObjectContext* and then add multiple blocks to the operation
-to be executed.
+to be executed. Like the native *NSBlockOperation*, you do not need to subclass 
+*FRCoreDataBlockOperation* to use it.
 
 	FRCoreDataBlockOperation *op = [[FRCoreDataBlockOperation alloc] initWithManagedObjectContext:<MAIN MANAGED OBJECT CONTEXT>];
 
@@ -61,7 +62,7 @@ cleanup. Alternatively the blocks are performed in the sequence they are added, 
 you require access to the threaded NSManagedObjectContext for any cleanup you can
 use this approach.
 
-**This Operation is ARC compatible**!
+**Both Operations is ARC compatible**!
 
 Example
 -------
