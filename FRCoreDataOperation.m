@@ -81,25 +81,16 @@
  */
 - (NSManagedObjectContext *)threadContext {
 	
-	NSPersistentStoreCoordinator	*storeCoordinator;
-	
 	//Create on demand
 	if( !_threadContext ){
 		
 		//Throw an exception if there is no main context
 		NSAssert([self mainContext], @"No Main context set in %@, cannot create thread context!",self);
-		NSAssert(![NSThread isMainThread], @"Thread Context called from the main context");
-		
-		//TODO:
-		//We need to stop doing this and have a proper mutator so that it can provided
-		storeCoordinator = [[self mainContext] persistentStoreCoordinator];
-		
-		_threadContext = [[NSManagedObjectContext alloc] init];
-		
-		//Use the same merge policy as the main thread
-		[_threadContext setMergePolicy:[[self mainContext] mergePolicy]];
-		
-		[_threadContext setPersistentStoreCoordinator:storeCoordinator];
+		//NSAssert(![NSThread isMainThread], @"Thread Context called from the main context");
+    
+		_threadContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSConfinementConcurrencyType];
+    
+    [_threadContext setParentContext:[self mainContext]];
 		
 		[[NSNotificationCenter defaultCenter] addObserver:self 
                                              selector:@selector(threadContextDidSave:)
@@ -117,7 +108,11 @@
 	if( [self mergeChanges] ){
 		
 		NSManagedObjectContext *blockContext = [self mainContext];
-		
+    
+    /**
+     *  TODO
+     *  Consider refactoring this to use performBlock: method of the NSManagedObjectContext
+     */
 		[[NSOperationQueue mainQueue] addOperationWithBlock:^{
 			[blockContext mergeChangesFromContextDidSaveNotification:aNotification];
 		}];
