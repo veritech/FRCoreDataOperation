@@ -22,10 +22,28 @@
 
 @required;
 
+/**
+ *  Transform/encode the object passed as a dictionary into the data format of choice
+ *  @param aDictionary A dictionary of values
+ *  @param aEntity The Entity 
+ *  @return The encoded binary representation of the delimiter
+ */
 - (NSData *)dataForDictionaryRespresentation:(NSDictionary *)aDictionary
                                     ofEntity:(NSEntityDescription *)aEntity; // 'foo','bar',0.0
 
+/**
+ *  The data used to delimit each object encoded by the dataForDictionaryRepresentation:ofEntity: method
+ *  @param aEnity The entity that is currently being decoded
+ *  @return The encoded binary representation of the delimiter
+ */
 - (NSData *)dataForObjectDelimiterOfEntity:(NSEntityDescription *)aEntity; // ,
+
+/**
+ *  The file name for the entity
+ *  @param aEntity The entity that is currently being decoded
+ *  @return the file name to be used to save the file
+ */
+- (NSString *)fileNameForEntity:(NSEntityDescription *)aEntity;
 
 @optional;
 
