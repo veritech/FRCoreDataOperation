@@ -36,6 +36,11 @@
 }
 
 #pragma mark - FRCoreDataEntityFormatter protocol
+- (NSString *)fileNameForEntity:(NSEntityDescription *)aEntity {
+  return [NSString stringWithFormat:@"%@.csv",[aEntity name]];
+}
+
+
 //Create a data header
 - (NSData *)dataForHeaderOfEntity:(NSEntityDescription *)aEntity {
   
