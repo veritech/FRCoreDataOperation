@@ -37,7 +37,10 @@
 
 #pragma mark - FRCoreDataEntityFormatter protocol
 - (NSString *)fileNameForEntity:(NSEntityDescription *)aEntity {
-  return [NSString stringWithFormat:@"%@.csv",[aEntity name]];
+    
+  return [NSString stringWithFormat:@"%@.csv",
+          [aEntity name]
+          ];
 }
 
 
