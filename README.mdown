@@ -123,7 +123,6 @@ use this approach.
 
 **FRCoreDataExportOperation** [NEW!]
 
-
 This operation takes an entity name, and an optional predicate and sort order and will export all objects that match that description to disk.
 
 The format in which they are written to disk can be customized. The *FRCSVEntityFormatter* will export the properties (Sorry, no relationships just yet) of an object to a CSV file, and save it in the user's Documents directory.
@@ -140,6 +139,7 @@ The class can used without subclassing:
 'Entity Formatters' conform to the FRCoreDataEntityFormatter protocol. It is important to bear in mind that your Custom entity formatter will be retained by the Operation, and will called from a background thread.
 
 TODO:
+
 * Make the FREntityFormatter API complatible with the NSCoding protocol
 
 **All Operations are ARC compatible**!
@@ -149,7 +149,7 @@ Credit
 
 Jonathan Dalrymple [E-mail](mailto:jonathan@float-right.co.uk) [twitter](http://twitter/veritech) [Online](http://float-right.co.uk)
 
-While i wrote the code, the Fantastic Marcus Zara gave me the inspiration and direction, get his book on CoreData, it's worth it!
+While I wrote the code, the Fantastic Marcus Zara gave me the inspiration and direction, get his book on CoreData, it's worth it!
 
 License (MIT)
 -------------
