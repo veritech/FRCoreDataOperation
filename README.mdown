@@ -1,13 +1,15 @@
-FRCoreDataOperation & FRCoreDataBlockOperation
-===========================
+FRCoreDataOperation
+===================
 
-**Problem**
+A Collection of NSOperation subclasses that provide the boilerplate code to work with *NSManagedObjects* on a background thread.
 
-* So you like multithreading, cool.
-* But you heard (correctly) that NSManagedObjects and CoreData isn't thread safe
-* But you want NSManagedObjects in your threads/Operations
+Currently the project consists 3 classes:
 
-Well here is the solution. FRCoreDataOperation, will generate a thread context on demand and make it nice and easy for you to use.
+* **FRCoreDataOperation** - Abstract class for building custom operations
+* **FRCoreDataBlockOperation** - A Helper class that doesn't require subclassing, and takes a block
+* **FRCoreDataExportOperation** - A Helper class that archive sets of objects.
+
+With introduction of the *performBlock* and *performBlockAndWait* on *NSManagedObjectContext* in iOS 5, it could be argued that the importance of these classes is less relevant. However while blocks are awesome, the block based methods do not provide any scope for queuing, dependency chaining, and cancellation, FRCoreDataOperation does.
 
 Basic Usage
 -----------
@@ -15,8 +17,7 @@ Basic Usage
 **FRCoreDataOperation**
 
 This class is designed to be be subclassed. Your subclass can override main, and all the other NSOperation methods just fine.
-You could just insert your own main method in the parent, but that would be kinda silly ^_^
-
+You could just insert your own main method in the parent, but that would be kinda silly ^_^.
 
 	FRCoreDataOperation *op = [[FRCoreDataOperation alloc] initWithManagedObjectContext:<MAIN MANAGED OBJECT CONTEXT>];
 	
@@ -28,44 +29,6 @@ Inside your subclass's operation all of your requests for a *NSManagedObjectCont
 
 This will return a thread safe managedObjectContext, which will use the persistent store coordinator as the managed object that you passed in.
 Do not call this method outside of the operation or in the *-(void)start* method of your NSOperation, as that will break it's thread isolation.
-
-**FRCoreDataBlockOperation** [NEW!]
-
-This class is CoreData focused version of the NSBlockOperation class. You can assign
-an operation a *NSManagedObjectContext* and then add multiple blocks to the operation
-to be executed. Like the native *NSBlockOperation*, you do not need to subclass 
-*FRCoreDataBlockOperation* to use it.
-
-	FRCoreDataBlockOperation *op = [[FRCoreDataBlockOperation alloc] initWithManagedObjectContext:<MAIN MANAGED OBJECT CONTEXT>];
-
-	[op addExecutionBlock:^(NSManagedObjectContext *threadContext){
-	
-		//DO your work on threaded NSManagedObjectContext
-	
-		return NO;	//Return YES to save, no to not save
-	}];
-
-	[<YOUR NSOperationQueue> addOperation:op];
-
-The NSManagedObjectContext is shared between all of the execution blocks so you can
-share state between blocks.
-
-The execution block return value determines if the NSManagedObjectContext should 
-be saveed.
-
-There is also a *saveAfterExecution* property on the operation to determine whether
-the *NSManagedObjectContext* is saved or not when all of the execution blocks have
-been executed.
-
-Also the *completionBlock* property is not used internally, so you may use it to perform
-cleanup. Alternatively the blocks are performed in the sequence they are added, so if
-you require access to the threaded NSManagedObjectContext for any cleanup you can
-use this approach.
-
-**Both Operations are ARC compatible**!
-
-Example
--------
 
 Lets say i want to import a list of countries i've visited into my new awesome travel app, but because i'm globe trotter, the list is huge.
 the main method of my 'Travel import operation' should look a little something like this ...
@@ -104,7 +67,7 @@ the main method of my 'Travel import operation' should look a little something l
 				nil
 			];
 		
-			for( country in countries ){
+			for( NSString* country in countries ){
 			
 				//Destination is a our subclassed NSManagedObject
 				//We create one for each country, and assign it to thread context
@@ -124,6 +87,62 @@ the main method of my 'Travel import operation' should look a little something l
 
 Thats all folks, if your actually doing some proper work, you want want to sleep your thread in-between iterations of your main loop.
 Also if your operation is going to run for any serious length of time, you'll want to consider checking *isCancelled* periodically to make sure you need to continue.
+
+**FRCoreDataBlockOperation**
+
+This class is CoreData focused version of the NSBlockOperation class. You can assign
+an operation a *NSManagedObjectContext* and then add multiple blocks to the operation
+to be executed. Like the native *NSBlockOperation*, you do not need to subclass 
+*FRCoreDataBlockOperation* to use it.
+
+	FRCoreDataBlockOperation *op = [[FRCoreDataBlockOperation alloc] initWithManagedObjectContext:<MAIN MANAGED OBJECT CONTEXT>];
+
+	[op addExecutionBlock:^(NSManagedObjectContext *threadContext){
+	
+		//DO your work on threaded NSManagedObjectContext
+	
+		return NO;	//Return YES to save, no to not save
+	}];
+
+	[<YOUR NSOperationQueue> addOperation:op];
+
+The NSManagedObjectContext is shared between all of the execution blocks so you can
+share state between blocks.
+
+The execution block return value determines if the NSManagedObjectContext should 
+be saveed.
+
+There is also a *saveAfterExecution* property on the operation to determine whether
+the *NSManagedObjectContext* is saved or not when all of the execution blocks have
+been executed.
+
+Also the *completionBlock* property is not used internally, so you may use it to perform
+cleanup. Alternatively the blocks are performed in the sequence they are added, so if
+you require access to the threaded NSManagedObjectContext for any cleanup you can
+use this approach.
+
+**FRCoreDataExportOperation** [NEW!]
+
+
+This operation takes an entity name, and an optional predicate and sort order and will export all objects that match that description to disk.
+
+The format in which they are written to disk can be customized. The *FRCSVEntityFormatter* will export the properties (Sorry, no relationships just yet) of an object to a CSV file, and save it in the user's Documents directory.
+
+The class can used without subclassing:
+
+	FRCoreDataExportOperation *op = [[FRCoreDataExportOperation alloc] initWithEntityName:@"Destination" managedObjectContext:<MAIN CONTEXT>];
+    
+	//Set the entity formatter
+	[op setEntityFormatter:[[FRCSVEntityFormatter alloc] init]];
+	
+	[<YOUR OPERATION QUEUE> addOperation:op];
+
+'Entity Formatters' conform to the FRCoreDataEntityFormatter protocol. It is important to bear in mind that your Custom entity formatter will be retained by the Operation, and will called from a background thread.
+
+TODO:
+* Make the FREntityFormatter API complatible with the NSCoding protocol
+
+**All Operations are ARC compatible**!
 
 Credit
 ------
