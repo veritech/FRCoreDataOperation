@@ -176,10 +176,10 @@
     results = [[self threadContext] executeFetchRequest:fetchRequest
                                                   error:&error];
     
-    DDLogVerbose(@"Exporting %d %@ objects",[results count],[self entityName]);
+    NSLog(@"Exporting %d %@ objects",[results count],[self entityName]);
     
     if (!results || error) {
-      DDLogError(@"Fetch error %@",error);
+      NSLog(@"Fetch error %@",error);
     }
     
     //Reuse the error prtr
@@ -206,7 +206,7 @@
                                                  error:&error];
     
     if (!fileHandle || error ) {
-      DDLogError(@"File error %@",error);
+      NSLog(@"File error %@",error);
     }
     
     attributes = [entityDescription attributesByName];
@@ -258,7 +258,7 @@
                       error:&error];
     
     if (error) {
-      DDLogError(@"File Error %@",error);
+      NSLog(@"File Error %@",error);
     }
    
   }
