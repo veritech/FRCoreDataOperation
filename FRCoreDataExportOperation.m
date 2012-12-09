@@ -129,9 +129,15 @@
 
 - (NSString *)filePath {
 
+  NSString *fileName = nil;
+  
+  if (!(fileName = [[self entityFormatter] fileNameForEntity:[self entityDescription]])) {
+    fileName = [NSString stringWithFormat:@"%@.dat",[[self entityName] lowercaseString]];
+  }
+  
   return [NSString pathWithComponents:@[
           NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES)[0],
-          [NSString stringWithFormat:@"%@.csv",[[self entityName] lowercaseString]]
+          fileName
    ]];
   
 }
@@ -171,10 +177,10 @@
     results = [[self threadContext] executeFetchRequest:fetchRequest
                                                   error:&error];
     
-    DDLogVerbose(@"Exporting %d objects",[results count]);
+    NSLog(@"Exporting %d %@ objects",[results count],[self entityName]);
     
     if (!results || error) {
-      DDLogError(@"Fetch error %@",error);
+      NSLog(@"Fetch error %@",error);
     }
     
     //Reuse the error prtr
@@ -199,7 +205,7 @@
     fileHandle = [NSFileHandle fileHandleForWritingAtPath:[self filePath]];
     
     if (!fileHandle || error ) {
-      DDLogError(@"File error %@",error);
+      NSLog(@"File error %@",error);
     }
     
     attributes = [entityDescription attributesByName];
@@ -248,7 +254,7 @@
     [fileHandle closeFile];
     
     if (error) {
-      DDLogError(@"File Error %@",error);
+      NSLog(@"File Error %@",error);
     }
    
   }
