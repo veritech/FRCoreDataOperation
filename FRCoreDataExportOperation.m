@@ -148,10 +148,11 @@
 
   NSEntityDescription *entityDescription = nil;
   NSFetchRequest *fetchRequest = nil;
-  NSMutableData *fileHandle = nil;
+  NSFileHandle *fileHandle = nil;
   NSDictionary *attributes = nil;
   NSArray *results = nil;
   NSError *error = nil;
+  
   
   @autoreleasepool {
     
@@ -195,9 +196,7 @@
                          contents:[NSData data]
                        attributes:nil];
     
-    fileHandle = [NSMutableData dataWithContentsOfFile:[self filePath]
-                                               options:NSDataReadingMappedIfSafe
-                                                 error:&error];
+    fileHandle = [NSFileHandle fileHandleForWritingAtPath:[self filePath]];
     
     if (!fileHandle || error ) {
       DDLogError(@"File error %@",error);
@@ -207,11 +206,10 @@
     
     //Header
     if ([[self entityFormatter] respondsToSelector:@selector(dataForHeaderOfEntity:)]) {
-      [fileHandle appendData:[[self entityFormatter] dataForHeaderOfEntity:[self entityDescription]]];
+      [fileHandle writeData:[[self entityFormatter] dataForHeaderOfEntity:[self entityDescription]]];
     }
     
     //Exact the attribute names and print them
-    
     for (NSUInteger i=0; i < [results count]; i++) {
       
       NSManagedObject *obj = (NSManagedObject *)[results objectAtIndex:i];
@@ -224,11 +222,11 @@
         data = [[self entityFormatter] dataForDictionaryRespresentation:[self dictionaryRepresentationOfManagedObject:obj]
                                                                ofEntity:[self entityDescription]];
         
-        [fileHandle appendData:data];
+        [fileHandle writeData:data];
         
         //Insert the delimiter
         if ( i < ([results count]-1) ) {
-          [fileHandle appendData:[[self entityFormatter] dataForObjectDelimiterOfEntity:[self entityDescription]]];
+          [fileHandle writeData:[[self entityFormatter] dataForObjectDelimiterOfEntity:[self entityDescription]]];
         }
         
         //Force the object we've just read to fault to 
@@ -240,16 +238,14 @@
     
     // Append the Footer
     if ([[self entityFormatter] respondsToSelector:@selector(dataForFooterOfEntity:)]) {
-      [fileHandle appendData:[[self entityFormatter] dataForFooterOfEntity:[self entityDescription]]];
+      [fileHandle writeData:[[self entityFormatter] dataForFooterOfEntity:[self entityDescription]]];
     }
     
     //Reuse the error prtr
     error = nil;
     
-    //Write the file to a path
-    [fileHandle writeToFile:[self filePath]
-                    options:NSDataWritingAtomic
-                      error:&error];
+    //Close the file
+    [fileHandle closeFile];
     
     if (error) {
       DDLogError(@"File Error %@",error);
