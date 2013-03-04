@@ -19,19 +19,26 @@
 @interface FRCoreDataExportOperation : FRCoreDataOperation
 
 /**
+ *	The File name to output the contents to
+ *
+ *	Defaults to the name of the entity
+ */
+@property (nonatomic,copy,readonly) NSString *fileName;
+
+/**
  *  The Entity name
  */
-@property (nonatomic,strong,readonly) NSString *entityName;
+@property (nonatomic,copy,readonly) NSString *entityName;
 
 /**
  *  The search predicate
  */
-@property (nonatomic,strong,readonly) NSPredicate *predicate;
+@property (nonatomic,copy,readonly) NSPredicate *predicate;
 
 /**
  *  The sort Descriptor
  */
-@property (nonatomic,strong,readonly) NSArray *sortDescriptors;
+@property (nonatomic,copy,readonly) NSArray *sortDescriptors;
 
 /**
  *  The formatter

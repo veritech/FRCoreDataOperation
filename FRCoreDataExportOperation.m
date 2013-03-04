@@ -16,8 +16,9 @@
 
 @interface FRCoreDataExportOperation ()
 
-@property (nonatomic,strong,readwrite) NSPredicate *predicate;
-@property (nonatomic,strong,readwrite) NSArray *sortDescriptors;
+@property (nonatomic,copy,readwrite) NSString *fileName
+@property (nonatomic,copy,readwrite) NSPredicate *predicate;
+@property (nonatomic,copy,readwrite) NSArray *sortDescriptors;
 @property (nonatomic,strong,readwrite) NSEntityDescription *entityDescription;
 
 @end
@@ -131,9 +132,9 @@
 
   NSString *fileName = nil;
   
-  if (!(fileName = [[self entityFormatter] fileNameForEntity:[self entityDescription]])) {
-    fileName = [NSString stringWithFormat:@"%@.dat",[[self entityName] lowercaseString]];
-  }
+	if (!fileName = [self fileName]) {
+		fileName = [NSString stringWithFormat:@"%@.dat",[[self entityName] lowercaseString]];		
+	}
   
   return [NSString pathWithComponents:@[
           NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES)[0],

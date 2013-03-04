@@ -38,13 +38,6 @@
  */
 - (NSData *)dataForObjectDelimiterOfEntity:(NSEntityDescription *)aEntity; // ,
 
-/**
- *  The file name for the entity
- *  @param aEntity The entity that is currently being decoded
- *  @return the file name to be used to save the file
- */
-- (NSString *)fileNameForEntity:(NSEntityDescription *)aEntity;
-
 @optional;
 
 /**
