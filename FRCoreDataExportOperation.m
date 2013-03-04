@@ -63,8 +63,6 @@
   return self;
 }
 
-
-
 #pragma mark - Formatting
 
 - (NSString *)entityName {

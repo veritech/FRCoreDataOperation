@@ -38,32 +38,35 @@ the main method of my 'Travel import operation' should look a little something l
 		@autorelease{
 		
 			//My travel history
-			NSArray *countries = [NSArray arrayWithObjects:
+			NSArray *countries = @[
+				@"Argentina",
+				@"Australia",
+				@"Belgium",
+				@"Brazil",
+				@"Canada",
+				@"Cambodia"
 				@"China",
-				@"Spain",
-				@"Greece",
+				@"Denmark",
 				@"France",
 				@"Germany",
+				@"Greece",
 				@"Hong Kong",
-				@"Jamaica",
-				@"Ukraine",
-				@"USA",
-				@"Canada",
-				@"Denmark",
-				@"Belgium",
-				@"Netherlands",
-				@"Ireland",
-				@"Thailand",
-				@"Malaysia",
-				@"Australia",
-				@"Israel",
-				@"Vietnam",
-				@"Macau",
 				@"Iceland",
-				@"Cambodia"
-				@"Wales",
-				@"Qatar",
+				@"Ireland",
+				@"Israel",
+				@"Jamaica",
+				@"Malaysia",
 				@"Malta",
+				@"Macau",
+				@"Netherlands",
+				@"Qatar",
+				@"Spain",
+				@"Thailand",
+				@"Ukraine",
+				@"Uruguay",
+				@"USA",
+				@"Vietnam",
+				@"Wales",
 				nil
 			];
 		
@@ -121,7 +124,7 @@ cleanup. Alternatively the blocks are performed in the sequence they are added, 
 you require access to the threaded NSManagedObjectContext for any cleanup you can
 use this approach.
 
-**FRCoreDataExportOperation** [NEW!]
+**FRCoreDataExportOperation**
 
 This operation takes an entity name, and an optional predicate and sort order and will export all objects that match that description to disk.
 
@@ -129,12 +132,21 @@ The format in which they are written to disk can be customized. The *FRCSVEntity
 
 The class can used without subclassing:
 
-	FRCoreDataExportOperation *op = [[FRCoreDataExportOperation alloc] initWithEntityName:@"Destination" managedObjectContext:<MAIN CONTEXT>];
+	FRCoreDataExportOperation *op = [[FRCoreDataExportOperation alloc] initWithEntityName:@"Destination" 
+																																	 managedObjectContext:<MAIN CONTEXT>];
     
+	//[Optional] Set the name of the output file
+	[op setFileName:@"output.txt"];
+	
 	//Set the entity formatter
 	[op setEntityFormatter:[[FRCSVEntityFormatter alloc] init]];
 	
 	[<YOUR OPERATION QUEUE> addOperation:op];
+	
+	//[Optional] Set a completion block to know when the file is complete
+	[op setCompletionBlock:^{
+		//Refresh the UI or send a notification
+	}];
 
 'Entity Formatters' conform to the FRCoreDataEntityFormatter protocol. It is important to bear in mind that your Custom entity formatter will be retained by the Operation, and will called from a background thread.
 
