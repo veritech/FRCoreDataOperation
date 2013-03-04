@@ -80,6 +80,15 @@
   
 }
 
+- (void)setFileName:(NSString *)aFileName {
+	
+  NSAssert(![self isExecuting], @"Cannot change the operation once it has started");
+	
+	_fileName = nil;
+	_fileName = [aFileName copy];
+	
+}
+
 #pragma mark - Object stringification
 -(id)transformValue:(id)aValue withAttributeName:(NSString *)aName {
   
