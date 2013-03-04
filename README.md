@@ -133,7 +133,7 @@ The format in which they are written to disk can be customized. The *FRCSVEntity
 The class can used without subclassing:
 
 	FRCoreDataExportOperation *op = [[FRCoreDataExportOperation alloc] initWithEntityName:@"Destination" 
-																																	 managedObjectContext:<MAIN CONTEXT>];
+									 managedObjectContext:<MAIN CONTEXT>];
     
 	//[Optional] Set the name of the output file
 	[op setFileName:@"output.txt"];
