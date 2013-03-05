@@ -16,7 +16,7 @@
 
 @interface FRCoreDataExportOperation ()
 
-@property (nonatomic,copy,readwrite) NSString *fileName
+@property (nonatomic,copy,readwrite) NSString *fileName;
 @property (nonatomic,copy,readwrite) NSPredicate *predicate;
 @property (nonatomic,copy,readwrite) NSArray *sortDescriptors;
 @property (nonatomic,strong,readwrite) NSEntityDescription *entityDescription;
@@ -28,7 +28,7 @@
 #pragma mark - Object creation
 - (id)initWithEntityName:(NSString *)aName
     managedObjectContext:(NSManagedObjectContext *)aMOC {
-
+  
   self = [super initWithManagedObjectContext:aMOC];
   if (self) {
     [self setEntityDescription:[NSEntityDescription entityForName:aName
@@ -90,63 +90,125 @@
 #pragma mark - Object stringification
 -(id)transformValue:(id)aValue withAttributeName:(NSString *)aName {
   
-  if ([aValue isKindOfClass:[NSNumber class]]) {
+  id returnValue = [NSNull null];
+  
+  //Attempt to transform value based on type where the value is not nil
+  if ([aValue isKindOfClass:[NSNumber class]]
+      && [[self entityFormatter] respondsToSelector:@selector(transformNumberValue:withAttributeName:)] ) {
+
+      returnValue = [[self entityFormatter] transformNumberValue:aValue
+                                               withAttributeName:aName];
+  }
+  else if ([aValue isKindOfClass:[NSString class]]
+           && [[self entityFormatter] respondsToSelector:@selector(transformStringValue:withAttributeName:)]) {
     
-    if ([[self entityFormatter] respondsToSelector:@selector(transformNumberValue:withAttributeName:)]) {
-      return [[self entityFormatter] transformNumberValue:aValue
-                                        withAttributeName:nil];
-    }
+    returnValue = [[self entityFormatter] transformStringValue:aValue
+                                             withAttributeName:aName];
+  
   }
-  else if ([aValue isKindOfClass:[NSString class]]) {
+  else if ([aValue isKindOfClass:[NSDate class]]
+           && [[self entityFormatter] respondsToSelector:@selector(transformDateValue:withAttributeName:)]) {
     
-    if ([[self entityFormatter] respondsToSelector:@selector(transformStringValue:withAttributeName:)]) {
-      return [[self entityFormatter] transformStringValue:aValue
-                                        withAttributeName:nil];
-    }
+    returnValue = [[self entityFormatter] transformDateValue:aValue
+                                           withAttributeName:aName];
+    
+  }
+  else if ([aValue isKindOfClass:[NSData class]]
+           && [[self entityFormatter] respondsToSelector:@selector(transformDataValue:withAttributeName:)]) {
+
+    returnValue = [[self entityFormatter] transformDataValue:aValue
+                                           withAttributeName:aName];
 
   }
-  else if ([aValue isKindOfClass:[NSDate class]]) {
-   
-    if ([[self entityFormatter] respondsToSelector:@selector(transformDateValue:withAttributeName:)]) {
-      return [[self entityFormatter] transformDateValue:aValue
-                                      withAttributeName:nil];
-    }
+  else if (aValue && [[self entityFormatter] respondsToSelector:@selector(transformValue:withAttributeName:)]) {
 
+    returnValue = [[self entityFormatter] transformValue:aValue
+                                withAttributeName:aName];
   }
-
-  return aValue ;
+  else if (aValue) {  //If there is no formatter and the value is not nil return as is.
+    returnValue = aValue;
+  }
+  
+  //execution should only reach here is the value is nil
+  return returnValue;
 }
 
 - (NSDictionary *)dictionaryRepresentationOfManagedObject:(NSManagedObject *)aObject {
-  
+  return [self dictionaryRepresentationOfManagedObject:aObject
+                                             recursive:YES];
+}
+
+- (NSDictionary *)dictionaryRepresentationOfManagedObject:(NSManagedObject *)aObject
+                                                recursive:(BOOL)isRecursive {
+
   NSMutableDictionary *dictionary;
   NSDictionary *attributes;
   
-  dictionary = [NSMutableDictionary dictionaryWithCapacity:0];
-  
   attributes = [[aObject entity] attributesByName];
+  
+  dictionary = [NSMutableDictionary dictionaryWithCapacity:[attributes count]];
   
   for (NSString *key in [attributes allKeys]) {
     
     [dictionary setObject:[self transformValue:[aObject valueForKey:key] withAttributeName:key]
                    forKey:key];
   }
+	
+	//Append the relationships to the dictionary
+  if (isRecursive) {
+    [dictionary addEntriesFromDictionary:[self dictionaryRepresentationOfRelationshipsWithManagedObject:aObject]];
+  }
   
   return [dictionary copy];
+  
+}
+
+- (NSDictionary *)dictionaryRepresentationOfRelationshipsWithManagedObject:(NSManagedObject *)aObject {
+  
+	NSDictionary *relationships = [[aObject entity] relationshipsByName];
+	NSDictionary *dictionary;
+	
+	for (NSString *key in [relationships allKeys]) {
+    
+		NSRelationshipDescription *relationship = [relationships objectForKey:key];
+		NSMutableArray *objects;
+    
+		//Handle one to one relationships
+		//break the loop
+		if (![relationship isToMany]) {
+			dictionary = @{
+                  key:[self dictionaryRepresentationOfManagedObject:[aObject valueForKey:key] recursive:NO]
+                  };
+			break;
+		}
+		
+		//Initialize the array and get the capacity
+		objects = [NSMutableArray arrayWithCapacity:[[aObject valueForKey:key] count]];
+		
+		//Handle one to many relationships
+		for (NSManagedObject *obj in [aObject valueForKey:key]) {
+			[objects addObject:[self dictionaryRepresentationOfManagedObject:obj
+                                                             recursive:NO]];
+		}
+		
+		dictionary = @{key:objects};
+	}
+	
+	return dictionary;
 }
 
 - (NSString *)filePath {
-
+  
   NSString *fileName = nil;
   
-	if (!fileName = [self fileName]) {
-		fileName = [NSString stringWithFormat:@"%@.dat",[[self entityName] lowercaseString]];		
+	if (!(fileName = [self fileName])) {
+		fileName = [NSString stringWithFormat:@"%@.dat",[[self entityName] lowercaseString]];
 	}
   
   return [NSString pathWithComponents:@[
           NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES)[0],
           fileName
-   ]];
+          ]];
   
 }
 
@@ -159,7 +221,7 @@
 
 #pragma mark - Main
 - (void)main {
-
+  
   NSEntityDescription *entityDescription = nil;
   NSFetchRequest *fetchRequest = nil;
   NSFileHandle *fileHandle = nil;
@@ -193,7 +255,7 @@
     
     //Reuse the error prtr
     error = nil;
-
+    
     ///////////////////////////////
     // Prepare the file for writing
     ///////////////////////////////
@@ -243,7 +305,7 @@
           [fileHandle writeData:[[self entityFormatter] dataForObjectDelimiterOfEntity:[self entityDescription]]];
         }
         
-        //Force the object we've just read to fault to 
+        //Force the object we've just read to fault to
         [[self threadContext] refreshObject:obj
                                mergeChanges:NO];
         
@@ -261,10 +323,12 @@
     //Close the file
     [fileHandle closeFile];
     
+    NSLog(@"%@",[NSString stringWithContentsOfFile:[self filePath]]);
+    
     if (error) {
       NSLog(@"File Error %@",error);
     }
-   
+    
   }
   
 }
