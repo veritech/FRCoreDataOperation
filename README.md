@@ -37,35 +37,10 @@ the main method of my 'Travel import operation' should look a little something l
 		
 		@autorelease{
 		
-			//My travel history
 			NSArray *countries = @[
 				@"Argentina",
 				@"Australia",
-				@"Belgium",
-				@"Brazil",
-				@"Canada",
-				@"Cambodia"
-				@"China",
-				@"Denmark",
-				@"France",
-				@"Germany",
-				@"Greece",
-				@"Hong Kong",
-				@"Iceland",
-				@"Ireland",
-				@"Israel",
-				@"Jamaica",
-				@"Malaysia",
-				@"Malta",
-				@"Macau",
-				@"Netherlands",
-				@"Qatar",
-				@"Spain",
-				@"Thailand",
-				@"Ukraine",
-				@"Uruguay",
-				@"USA",
-				@"Vietnam",
+				...
 				@"Wales",
 				nil
 			];
@@ -88,8 +63,7 @@ the main method of my 'Travel import operation' should look a little something l
 		}
 	}
 
-Thats all folks, if your actually doing some proper work, you want want to sleep your thread in-between iterations of your main loop.
-Also if your operation is going to run for any serious length of time, you'll want to consider checking *isCancelled* periodically to make sure you need to continue.
+If your operation is going to run for any serious length of time, you'll want to consider checking *isCancelled* periodically to make sure you need to continue.
 
 **FRCoreDataBlockOperation**
 
@@ -102,9 +76,9 @@ to be executed. Like the native *NSBlockOperation*, you do not need to subclass
 
 	[op addExecutionBlock:^(NSManagedObjectContext *threadContext){
 	
-		//DO your work on threaded NSManagedObjectContext
+		//Do your work on the supplied NSManagedObjectContext
 	
-		return NO;	//Return YES to save, no to not save
+		return NO;	//Return YES to save, NO to not save
 	}];
 
 	[<YOUR NSOperationQueue> addOperation:op];
@@ -113,22 +87,22 @@ The NSManagedObjectContext is shared between all of the execution blocks so you 
 share state between blocks.
 
 The execution block return value determines if the NSManagedObjectContext should 
-be saveed.
+be saved.
 
 There is also a *saveAfterExecution* property on the operation to determine whether
 the *NSManagedObjectContext* is saved or not when all of the execution blocks have
 been executed.
 
 Also the *completionBlock* property is not used internally, so you may use it to perform
-cleanup. Alternatively the blocks are performed in the sequence they are added, so if
+cleanup. Alternatively the blocks are executed in the sequence they are added, so if
 you require access to the threaded NSManagedObjectContext for any cleanup you can
-use this approach.
+add a clean block using the *addExecutionBlock:*
 
 **FRCoreDataExportOperation**
 
 This operation takes an entity name, and an optional predicate and sort order and will export all objects that match that description to disk.
 
-The format in which they are written to disk can be customized. The *FRCSVEntityFormatter* will export the properties (Sorry, no relationships just yet) of an object to a CSV file, and save it in the user's Documents directory.
+The format in which they are written to disk can be customized. The *FRCSVEntityFormatter* will export the properties of an object to a CSV file, and save it in the user's Documents directory.
 
 The class can used without subclassing:
 
@@ -150,11 +124,17 @@ The class can used without subclassing:
 
 'Entity Formatters' conform to the FRCoreDataEntityFormatter protocol. It is important to bear in mind that your Custom entity formatter will be retained by the Operation, and will called from a background thread.
 
-TODO:
-
-* Make the FREntityFormatter API complatible with the NSCoding protocol
-
 **All Operations are ARC compatible**!
+
+Change Log
+----------
+
+**0.4.0**
+
+* [Feature] Columns can be whitelisted in the FRCSVCoreDataFormatter
+* [Feature] You can now specify a file name in the operation
+* [Enhancement] Relatated properties of the search entity are visible in the formatter
+* [Enhancement] Improved the ability to format different data types
 
 Credit
 ------
