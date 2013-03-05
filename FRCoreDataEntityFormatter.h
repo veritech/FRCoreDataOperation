@@ -46,31 +46,65 @@
 - (BOOL)encodeRelationshipsForEntity:(NSEntityDescription *)aEntity;
 
 /**
- *  Returns a propery formatted stiring value, in a binary/raw form for writting to a file
+ *  Returns a propery formatted string value, in a binary/raw form for writting to a file
  *
  *  @param aString The string to be converted into data
  *  @param aName The name of the attribute that is being converted
  *  @retutn a representation of the string in binary form
  */
-- (id)transformStringValue:(NSString *)aString withAttributeName:(NSString *)aName;
+- (id)transformStringValue:(NSString *)aString
+         withAttributeName:(NSString *)aName;
 
 /**
  *  Returns a propery formatted number value, in a binary/raw form for writting to a file
  *
- *  @param aNumber The a number to be converted into data
+ *  @param aNumber The number to be converted into data
  *  @param aName The name of the attribute that is being converted
  *  @retutn a representation of the number in binary form
  */
-- (id)transformNumberValue:(NSNumber *)aNumber withAttributeName:(NSString *)aName;
+- (id)transformNumberValue:(NSNumber *)aNumber
+         withAttributeName:(NSString *)aName;
 
 /**
- *  Returns a propery formatted number value, in a binary/raw form for writting to a file
+ *  Returns a propery formatted date value, in a binary/raw form for writting to a file
  *
- *  @param aNumber The a number to be converted into data
+ *  @param aDate The date to be converted into data
  *  @param aName The name of the attribute that is being converted
  *  @return a representation of the number in binary form
  */
-- (id)transformDateValue:(NSDate *)aDate withAttributeName:(NSString *)aName;
+- (id)transformDateValue:(NSDate *)aDate
+       withAttributeName:(NSString *)aName;
+
+/**
+ *  Returns a propery formatted data value, in a binary/raw form for writting to a file
+ *
+ *  @param aData The data to be converted into data
+ *  @param aName The name of the attribute that is being converted
+ *  @return a representation of the number in binary form
+ */
+- (id)transformDataValue:(NSData *)aData
+       withAttributeName:(NSString *)aName;
+
+/**
+ *  Returns a propery formatted boolean value, in a binary/raw form for writting to a file
+ *
+ *  @warning This method is not currently supported, the NSNumber transformation method will be called instead
+ *  @param aBool The boolean to be converted into data
+ *  @param aName The name of the attribute that is being converted
+ *  @return a representation of the number in binary form
+ */
+- (id)transformBooleanValue:(BOOL)aBool
+          withAttributeName:(NSString *)aName;
+
+/**
+ *  Returns a propery formatted value, in a binary/raw form for writting to a file
+ *
+ *  @param aValue The value to be converted into data
+ *  @param aName The name of the attribute that is being converted
+ *  @return a representation of the number in binary form
+ */
+- (id)transformValue:(id)aValue
+   withAttributeName:(NSString *)aName;
 
 /**
  *  Data to prefixed to each entity
