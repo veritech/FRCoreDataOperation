@@ -323,8 +323,6 @@
     //Close the file
     [fileHandle closeFile];
     
-    NSLog(@"%@",[NSString stringWithContentsOfFile:[self filePath]]);
-    
     if (error) {
       NSLog(@"File Error %@",error);
     }
