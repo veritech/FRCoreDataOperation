@@ -16,4 +16,9 @@
 
 @interface FRCSVEntityFormatter : NSObject<FRCoreDataEntityFormatter>
 
+@property (nonatomic,copy) NSArray *whiteList;
+@property (nonatomic,copy) NSString *dateFormat;
+
+- (id)initWithWhiteList:(NSArray *)whiteList;
+
 @end

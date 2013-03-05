@@ -12,21 +12,40 @@
 
 #import "FRCSVEntityFormatter.h"
 
+#define kDateFormatterString @"yyyy-MM-dd'T'HH:mm:ss.SSS"
+
 @interface FRCSVEntityFormatter ()
 
 @property (nonatomic,strong,readwrite) NSDateFormatter *dateFormatter;
-@property (nonatomic,strong,readwrite) NSArray *sortedKeys;
 
 @end
 
 @implementation FRCSVEntityFormatter
 
+#pragma mark - Object life cycle
+- (id)init {
+  self = [super init];
+  if (self) {
+    [self setDateFormat:kDateFormatterString];
+  }
+  return self;
+}
+
+- (id)initWithWhiteList:(NSArray *)whiteList {
+  self = [self init];
+  if (self) {
+    [self setWhiteList:whiteList];
+  }
+  return self;
+}
+
+#pragma mark -
 - (NSDateFormatter *)dateFormatter {
   
   if (!_dateFormatter) {
     _dateFormatter = [[NSDateFormatter alloc] init];
     
-    [_dateFormatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss"];
+    [_dateFormatter setDateFormat:[self dateFormat]];
   }
   return _dateFormatter;
 }
@@ -36,14 +55,6 @@
 }
 
 #pragma mark - FRCoreDataEntityFormatter protocol
-- (NSString *)fileNameForEntity:(NSEntityDescription *)aEntity {
-    
-  return [NSString stringWithFormat:@"%@.csv",
-          [aEntity name]
-          ];
-}
-
-
 //Create a data header
 - (NSData *)dataForHeaderOfEntity:(NSEntityDescription *)aEntity {
   
@@ -51,30 +62,43 @@
   NSArray *columnNames;
   NSString *header;
   
-  //Get all the attribute names
-  columnNames = [[attributes allKeys] sortedArrayUsingSelector:@selector(compare:)];
-  
-  header = [columnNames componentsJoinedByString:@","];
-  
-  header = [header stringByAppendingString:@"\n"];
+  if ([self whiteList]) {
+    header = [[self whiteList] componentsJoinedByString:@","];
+  }
+  else {
+    //Get all the attribute names
+    columnNames = [[attributes allKeys] sortedArrayUsingSelector:@selector(compare:)];
+    
+    header = [columnNames componentsJoinedByString:@","];
+  }
   
   //Join them with a comma
-  return [self dataWithString:header];
+  return [self dataWithString:[header stringByAppendingString:@"\n"]];
   
 }
 
 // Format values
 - (id)transformDateValue:(NSDate *)aDate withAttributeName:(NSString *)aName {
-  return [NSNumber numberWithDouble:[aDate timeIntervalSince1970]];
+  return [[self dateFormatter] stringFromDate:aDate];
 }
 
 - (id)transformNumberValue:(NSNumber *)aNumber withAttributeName:(NSString *)aName {
   return [aNumber stringValue];
 }
 
+- (id)transformDataValue:(NSData *)aData withAttributeName:(NSString *)aName {
+  return [[aData description] stringByTrimmingCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@"<>"]];
+}
+
 //Escape quotes, and remove trim whitespace
 - (id)transformStringValue:(NSString *)aString withAttributeName:(NSString *)aName {
-  return [[aString stringByReplacingOccurrencesOfString:@"\"" withString:@"'\"\""] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+  
+  NSString *str = [aString stringByReplacingOccurrencesOfString:@"\""
+                                                     withString:@"'\"\""];
+  
+  [str stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+  
+  return [NSString stringWithFormat:@"\"%@\"",str];
 }
 
 //Encode a objects
@@ -82,17 +106,35 @@
                                     ofEntity:(NSEntityDescription *)aEntity {
   
   NSArray *keys;
-  NSArray *values;
-  
-  //Sort the keys
-  keys = [[aDictionary allKeys] sortedArrayUsingSelector:@selector(compare:)];
-  
-  //Get the values in the order of the sorted keys
-  values = [aDictionary objectsForKeys:keys
-                        notFoundMarker:@"NAN"];
-  
+  id columns;
+
+  if (![self whiteList]) {
+    //Sort the keys
+    keys = [[aDictionary allKeys] sortedArrayUsingSelector:@selector(compare:)];
+    
+    //Get the values in the order of the sorted keys
+    columns = [aDictionary objectsForKeys:keys
+                           notFoundMarker:[NSNull null]];
+  }
+  else {
+
+    id value;
+    
+    columns = [NSMutableArray arrayWithCapacity:[aDictionary count]];
+    
+    for (NSString *path in [self whiteList]) {
+      
+      if (!(value = [aDictionary valueForKeyPath:path])) {
+        value = [NSNull null];
+      }
+      
+      [columns addObject:value];
+    }
+    
+  }
+
   //Encode
-  return [self dataWithString:[values componentsJoinedByString:@","]];
+  return [self dataWithString:[columns componentsJoinedByString:@","]];
   
 }
 
