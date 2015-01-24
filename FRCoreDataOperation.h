@@ -33,7 +33,7 @@
  *	Determines if the changes should be merged into the main context
  *	Defaults to YES
  */
-@property (nonatomic,assign)	BOOL						mergeChanges;
+@property (nonatomic,assign)	BOOL mergeChanges;
 
 /**
  *	Create a core data operation with a given managed object context

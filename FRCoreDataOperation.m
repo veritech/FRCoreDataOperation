@@ -68,9 +68,8 @@
 	//Remove the observer if we've used the thread context
 	if (_threadContext) {
 		[[NSNotificationCenter defaultCenter] removeObserver:self 
-                                                    name:NSManagedObjectContextDidSaveNotification
-                                                  object:_threadContext
-		 ];		
+                                                        name:NSManagedObjectContextDidSaveNotification
+                                                      object:_threadContext];
 	}
 
 }
@@ -81,22 +80,30 @@
  */
 - (NSManagedObjectContext *)threadContext {
 	
+	NSPersistentStoreCoordinator	*storeCoordinator;
+	
 	//Create on demand
 	if( !_threadContext ){
 		
 		//Throw an exception if there is no main context
 		NSAssert([self mainContext], @"No Main context set in %@, cannot create thread context!",self);
-		//NSAssert(![NSThread isMainThread], @"Thread Context called from the main context");
-    
-		_threadContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSConfinementConcurrencyType];
-    
-    [_threadContext setParentContext:[self mainContext]];
+		NSAssert(![NSThread isMainThread], @"Thread Context called from the main context");
+		
+		//TODO:
+		//We need to stop doing this and have a proper mutator so that it can provided
+		storeCoordinator = [[self mainContext] persistentStoreCoordinator];
+		
+		_threadContext = [[NSManagedObjectContext alloc] init];
+		
+		//Use the same merge policy as the main thread
+		[_threadContext setMergePolicy:[[self mainContext] mergePolicy]];
+		
+		[_threadContext setPersistentStoreCoordinator:storeCoordinator];
 		
 		[[NSNotificationCenter defaultCenter] addObserver:self 
-                                             selector:@selector(threadContextDidSave:)
-                                                 name:NSManagedObjectContextDidSaveNotification
-                                               object:_threadContext
-		 ];
+                                                 selector:@selector(threadContextDidSave:)
+                                                     name:NSManagedObjectContextDidSaveNotification
+                                                   object:_threadContext];
 	}
 	
 	return _threadContext;
@@ -106,19 +113,13 @@
 - (void)threadContextDidSave:(NSNotification *) aNotification {
 	
 	if( [self mergeChanges] ){
-		
-		NSManagedObjectContext *blockContext = [self mainContext];
     
-    /**
-     *  TODO
-     *  Consider refactoring this to use performBlock: method of the NSManagedObjectContext
-     */
-		[[NSOperationQueue mainQueue] addOperationWithBlock:^{
-			[blockContext mergeChangesFromContextDidSaveNotification:aNotification];
-		}];
+		NSManagedObjectContext *blockContext = [self mainContext];
 		
+        [[self mainContext] performBlock:^{
+			[blockContext mergeChangesFromContextDidSaveNotification:aNotification];
+        }];
 	}
-
 }
 
 #pragma mark - KVO Observing
@@ -140,7 +141,7 @@
 	NSLog(@"%@ operationWillCancel",self);
 }
 
-- (NSString *)description {
+- (NSString *)debugDescription {
 	return [NSString stringWithFormat:@"%@ Ready:%d Executing:%d Finished:%d Cancelled:%d",
           [super description],
           [self isReady],
