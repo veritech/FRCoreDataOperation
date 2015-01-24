@@ -11,6 +11,8 @@ Currently the project consists 3 classes:
 
 With introduction of the *performBlock* and *performBlockAndWait* on *NSManagedObjectContext* in iOS 5, it could be argued that the importance of these classes is less relevant. However while blocks are awesome, the block based methods do not provide any scope for queuing, dependency chaining, and cancellation, FRCoreDataOperation does.
 
+*Update 2015/1/23* After reading some research by [Florian Kugler](http://floriankugler.com/2013/05/13/backstage-with-nested-managed-object-contexts/), I come to the conclusion to revert the code back to using the 'old fashione'd Merge technique as it provides better performance, and allows for imports to remain almost completely off the main thread, assuming the context that you pass to your *FRCoreDataOperation* is a private queue context linked to the persistent store Coordinator. 
+
 Basic Usage
 -----------
 
