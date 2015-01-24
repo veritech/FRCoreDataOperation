@@ -247,10 +247,10 @@
     results = [[self threadContext] executeFetchRequest:fetchRequest
                                                   error:&error];
     
-    NSLog(@"Exporting %d %@ objects",[results count],[self entityName]);
+    NSLog(@"Exporting %lu %@ objects",[results count],[self entityName]);
     
     if (!results || error) {
-      NSLog(@"Fetch error %@",error);
+    	NSLog(@"Fetch error %@",error);
     }
     
     //Reuse the error prtr
